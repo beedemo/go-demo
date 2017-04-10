@@ -1,0 +1,40 @@
+version: '2'
+
+services:
+
+  unit:
+    image: golang:1.6
+    volumes:
+      - .:/usr/src/myapp
+      - /tmp/go:/go
+    working_dir: /usr/src/myapp
+    command: bash -c "pwd && go get -d -v -t && go test --cover -v ./... && go build -v -o go-demo"
+
+  staging-dep:
+    extends:
+      file: docker-compose.yml
+      service: app
+    ports:
+      - 8080:8080
+    depends_on:
+      - db
+
+  staging:
+    extends:
+      service: unit
+    environment:
+      - HOST_IP=localhost:8080
+    network_mode: host
+    command: bash -c "cd /usr/src/myapp && go get -d -v -t && go test --tags integration -v"
+
+  production:
+    extends:
+      service: unit
+    environment:
+      - HOST_IP=${HOST_IP}
+    command: bash -c "cd /usr/src/myapp && go get -d -v -t && go test --tags integration -v"
+
+  db:
+    extends:
+      file: docker-compose.yml
+      service: db

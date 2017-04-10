@@ -1,0 +1,11 @@
+version: '2'
+
+services:
+
+  app:
+    image: beedemo/go-demo
+    ports:
+      - 8080
+
+  db:
+    image: mongo:3.2.10
