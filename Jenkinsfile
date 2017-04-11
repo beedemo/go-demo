@@ -1,5 +1,10 @@
 script {
     def short_commit = null
+    try {
+      sh "docker rm -f anchore_cli"
+    } catch(e){
+      //do nothing
+    }
 }
 pipeline {
   options { 
@@ -34,7 +39,6 @@ pipeline {
         sh "docker exec anchore_cli anchore feeds sync"
         sh "docker exec anchore_cli anchore analyze --image go-demo"
         sh "docker exec anchore_cli anchore gate --image go-demo"
-        sh "docker rm -f anchore_cli"
       }
     }
     stage("Publish") {
@@ -49,6 +53,7 @@ pipeline {
   post {
     always {
       sh "docker-compose -f docker-compose-test-local.yml down"
+      sh "docker rm -f anchore_cli"
     }
   }
 }
