@@ -11,6 +11,7 @@ pipeline {
   }
   environment {
     DOCKER_HUB_USER = 'beedemo'
+    DOCKER_CREDENTIAL_ID = 'docker-hub-beedemo'
   }
   stages {
     stage("Unit") {
@@ -30,7 +31,9 @@ pipeline {
     stage("Publish") {
       steps {
         sh "docker tag go-demo $DOCKER_HUB_USER/go-demo:${SHORT_COMMIT}"
-        sh "docker push $DOCKER_HUB_USER/go-demo:${SHORT_COMMIT}"
+        withDockerRegistry(registry: [credentialsId: "$DOCKER_CREDENTIAL_ID"]) {
+           sh "docker push $DOCKER_HUB_USER/go-demo:${SHORT_COMMIT}"
+        }
       }
     }
   }
