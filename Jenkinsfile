@@ -30,10 +30,12 @@ pipeline {
     }
     stage("Scan") {
       steps {
-        try {
-          sh "docker rm -f anchore_cli"
-        } catch(e){
-          //do nothing
+        script {
+          try {
+            sh "docker rm -f anchore_cli"
+          } catch(e){
+            //do nothing
+          }
         }
         sh "docker run -d --name anchore_cli -v /var/run/docker.sock:/var/run/docker.sock anchore/cli:latest"
         sh "docker exec anchore_cli anchore feeds sync"
