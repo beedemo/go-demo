@@ -32,7 +32,8 @@ pipeline {
       steps {
         sh "docker run -d --name anchore_cli -v /var/run/docker.sock:/var/run/docker.sock anchore/cli:latest"
         sh "docker exec anchore_cli anchore feeds sync"
-        sh "docker exec anchore_cli anchore gate --image go-demo:latest"
+        sh "docker exec anchore_cli anchore analyze --image go-demo"
+        sh "docker exec anchore_cli anchore gate --image go-demo"
         sh "docker rm -f anchore_cli"
       }
     }
