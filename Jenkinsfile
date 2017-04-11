@@ -22,17 +22,18 @@ pipeline {
         sh "docker build -t go-demo ."
       }
     }
-    stage("Scan") {
-      steps {
-        sh "docker run -d --name anchore_cli -v /var/run/docker.sock:/var/run/docker.sock anchore/cli:latest"
-        sh "docker exec anchore_cli anchore analyze --image go-demo"
-        sh "docker rm -f anchore_cli"
-      }
-    }
     stage("Staging") {
       steps {
         sh "docker-compose -f docker-compose-test-local.yml up -d staging-dep"
         sh 'HOST_IP=localhost docker-compose -f docker-compose-test-local.yml run --rm staging'
+      }
+    }
+    stage("Scan") {
+      steps {
+        sh "docker run -d --name anchore_cli -v /var/run/docker.sock:/var/run/docker.sock anchore/cli:latest"
+        sh "docker exec anchore_cli anchore feeds sync"
+        sh "docker exec anchore_cli anchore analyze --image go-demo"
+        sh "docker rm -f anchore_cli"
       }
     }
     stage("Publish") {
