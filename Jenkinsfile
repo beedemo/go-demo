@@ -20,7 +20,6 @@ pipeline {
         gitShortCommit(7)
         sh "docker-compose -f docker-compose-test.yml run --rm unit"
         sh "docker build -t go-demo ."
-        sh "pwd"
       }
     }
     stage("Staging") {
@@ -34,7 +33,7 @@ pipeline {
         sh "docker run -d --name anchore_cli -v /var/run/docker.sock:/var/run/docker.sock -v /jenkins:/jenkins anchore/cli:latest"
         sh "docker exec anchore_cli anchore feeds sync"
         sh "docker exec anchore_cli anchore analyze --image go-demo"
-        sh "docker exec anchore_cli anchore gate --image go-demo --policy /jenkins/go-demo/anchore_policy.txt"
+        sh "docker exec anchore_cli anchore gate --image go-demo --policy $PWD/anchore_policy.txt"
       }
     }
     stage("Publish") {
