@@ -28,15 +28,6 @@ pipeline {
         sh 'HOST_IP=localhost docker-compose -f docker-compose-test-local.yml run --rm staging'
       }
     }
-    stage("Scan") {
-      steps {
-        sh "docker run -d --name anchore_cli -v /var/run/docker.sock:/var/run/docker.sock -v /jenkins:/jenkins anchore/cli:latest"
-        sh "docker exec anchore_cli anchore feeds sync"
-        sh "docker exec anchore_cli anchore analyze --image go-demo:latest --dockerfile  ${pwd()}/Dockerfile"
-        sh "docker exec anchore_cli anchore gate --force --image go-demo:latest --listpolicy"
-        sh "docker exec anchore_cli anchore gate --force --image go-demo:latest"
-      }
-    }
     stage("Publish") {
       steps {
         sh "docker tag go-demo $DOCKER_HUB_USER/go-demo:${SHORT_COMMIT}"
