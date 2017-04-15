@@ -18,14 +18,14 @@ pipeline {
       steps {
         checkout scm
         gitShortCommit(7)
-        sh "docker-compose -f docker-compose-test.yml run --rm unit"
+        sh "docker-compose -f docker-compose-test.yml -p ${BUILD_NUMBER}-${SHORT_COMMIT} run --rm unit"
         sh "docker build -t go-demo ."
       }
     }
     stage("Staging") {
       steps {
-        sh "EXTERNAL_PORT=80${BUILD_NUMBER} docker-compose -f docker-compose-test-local.yml up -d staging-dep"
-        sh "HOST_IP=localhost EXTERNAL_PORT=80${BUILD_NUMBER} docker-compose -f docker-compose-test-local.yml run --rm staging"
+        sh "docker-compose -f docker-compose-test-local.yml -p ${BUILD_NUMBER}-${SHORT_COMMIT} up -d staging-dep"
+        sh "HOST_IP=localhost docker-compose -f docker-compose-test-local.yml -p ${BUILD_NUMBER}-${SHORT_COMMIT} run --rm staging"
       }
     }
     stage("Publish") {
@@ -39,7 +39,7 @@ pipeline {
   }
   post {
     always {
-      sh "EXTERNAL_PORT=80${BUILD_NUMBER} docker-compose -f docker-compose-test-local.yml down"
+      sh "docker-compose -f docker-compose-test-local.yml -p ${BUILD_NUMBER}-${SHORT_COMMIT} down"
     }
   }
 }
