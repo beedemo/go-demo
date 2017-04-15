@@ -26,7 +26,7 @@ pipeline {
     }
     stage("Staging") {
       steps {
-        sh "IMAGE_ID= docker-compose -f docker-compose-test-local.yml -p ${BUILD_NUMBER}-${SHORT_COMMIT} up -d staging-dep"
+        sh "IMAGE_ID=${IMAGE_ID} docker-compose -f docker-compose-test-local.yml -p ${BUILD_NUMBER}-${SHORT_COMMIT} up -d staging-dep"
         sh "HOST_IP=localhost docker-compose -f docker-compose-test-local.yml -p ${BUILD_NUMBER}-${SHORT_COMMIT} run --rm staging"
       }
     }
