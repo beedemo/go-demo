@@ -32,7 +32,7 @@ pipeline {
     }
     stage("Publish") {
       steps {
-        sh "docker tag ${IMAGE_ID} $DOCKER_HUB_USER/go-demo:${SHORT_COMMIT}"
+        sh "docker tag ${IMAGE_ID} ${DOCKER_HUB_USER}/go-demo:${SHORT_COMMIT}"
         withDockerRegistry(registry: [credentialsId: "$DOCKER_CREDENTIAL_ID"]) {
            sh "docker push $DOCKER_HUB_USER/go-demo:${SHORT_COMMIT}"
         }
