@@ -39,7 +39,7 @@ pipeline {
   }
   post {
     always {
-      sh "docker-compose -f docker-compose-test-local.yml down"
+      sh "EXTERNAL_PORT=80${BUILD_NUMBER} docker-compose -f docker-compose-test-local.yml down"
     }
   }
 }
