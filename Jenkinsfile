@@ -20,7 +20,7 @@ pipeline {
         gitShortCommit(7)
         sh "docker-compose -f docker-compose-test.yml -p ${BUILD_NUMBER}-${SHORT_COMMIT} run --rm unit"
         script {
-          env.IMAGE_ID = sh(returnStdout: true, script: "docker build -q .")
+          env.IMAGE_ID = sh(returnStdout: true, script: "docker build -q .").trim()
         }
       }
     }
