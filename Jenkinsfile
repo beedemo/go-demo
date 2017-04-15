@@ -40,7 +40,6 @@ pipeline {
   post {
     always {
       sh "docker-compose -f docker-compose-test-local.yml down"
-      sh "docker rm -f anchore_cli"
     }
   }
 }
