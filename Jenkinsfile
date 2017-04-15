@@ -19,18 +19,20 @@ pipeline {
         checkout scm
         gitShortCommit(7)
         sh "docker-compose -f docker-compose-test.yml -p ${BUILD_NUMBER}-${SHORT_COMMIT} run --rm unit"
-        sh "docker build -t go-demo ."
+        script {
+          env.IMAGE_ID = sh(returnStdout: true, script: "docker build -q .")
+        }
       }
     }
     stage("Staging") {
       steps {
-        sh "docker-compose -f docker-compose-test-local.yml -p ${BUILD_NUMBER}-${SHORT_COMMIT} up -d staging-dep"
+        sh "IMAGE_ID= docker-compose -f docker-compose-test-local.yml -p ${BUILD_NUMBER}-${SHORT_COMMIT} up -d staging-dep"
         sh "HOST_IP=localhost docker-compose -f docker-compose-test-local.yml -p ${BUILD_NUMBER}-${SHORT_COMMIT} run --rm staging"
       }
     }
     stage("Publish") {
       steps {
-        sh "docker tag go-demo $DOCKER_HUB_USER/go-demo:${SHORT_COMMIT}"
+        sh "docker tag ${IMAGE_ID} $DOCKER_HUB_USER/go-demo:${SHORT_COMMIT}"
         withDockerRegistry(registry: [credentialsId: "$DOCKER_CREDENTIAL_ID"]) {
            sh "docker push $DOCKER_HUB_USER/go-demo:${SHORT_COMMIT}"
         }

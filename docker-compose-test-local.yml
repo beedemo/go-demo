@@ -15,7 +15,7 @@ services:
     command: bash -c "go get -d -v -t && go test --cover -v ./... && go build -v -o go-demo"
 
   staging-dep:
-    image: go-demo
+    image: ${IMAGE_ID}
     ports:
       - "8080"
     depends_on:
