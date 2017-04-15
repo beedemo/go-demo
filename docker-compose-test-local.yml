@@ -17,7 +17,7 @@ services:
   staging-dep:
     image: go-demo
     ports:
-      - ${EXTERNAL_PORT}:8080
+      - "${EXTERNAL_PORT}:8080"
     depends_on:
       - db
 

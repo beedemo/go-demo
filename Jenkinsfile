@@ -24,8 +24,8 @@ pipeline {
     }
     stage("Staging") {
       steps {
-        sh "EXTERNAL_PORT=800${BUILD_NUMBER} docker-compose -f docker-compose-test-local.yml up -d staging-dep"
-        sh "HOST_IP=localhost EXTERNAL_PORT=800${BUILD_NUMBER} docker-compose -f docker-compose-test-local.yml run --rm staging"
+        sh "EXTERNAL_PORT=80${BUILD_NUMBER} docker-compose -f docker-compose-test-local.yml up -d staging-dep"
+        sh "HOST_IP=localhost EXTERNAL_PORT=80${BUILD_NUMBER} docker-compose -f docker-compose-test-local.yml run --rm staging"
       }
     }
     stage("Publish") {
