@@ -5,6 +5,7 @@ pipeline {
   options { 
     buildDiscarder(logRotator(numToKeepStr: '5')) 
     skipDefaultCheckout() 
+    timeout(time: 5, unit: 'MINUTES')
   }
   agent {
     label "dind-compose"
