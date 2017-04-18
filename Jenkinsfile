@@ -7,7 +7,7 @@ pipeline {
     skipDefaultCheckout() 
   }
   agent {
-    label "docker-compose"
+    label "dind-compose"
   }
   environment {
     DOCKER_HUB_USER = 'beedemo'
