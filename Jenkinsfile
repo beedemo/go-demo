@@ -38,7 +38,7 @@ pipeline {
         gitShortCommit(7)
         sh "UNIT_CACHE_IMAGE=${DOCKER_HUB_USER}/go-demo:unit-cache docker-compose -f docker-compose-test.yml -p ${BUILD_NUMBER}-${SHORT_COMMIT} run --rm unit"
         script {
-          env.IMAGE_ID = sh(returnStdout: true, script: "docker build -q .").trim()
+          env.IMAGE_ID = sh(returnStdout: true, script: "docker build --cache-from alpine:3.4 -q .").trim()
         }
       }
     }
