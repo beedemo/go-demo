@@ -11,12 +11,12 @@ services:
     command: bash -c "pwd && go get -d -v -t && go test --cover -v ./... && go build -v -o go-demo"
 
   unit:
-    image: ${UNIT_CACHE_IMAGE}
+    image: golang:1.6
     volumes:
       - .:/usr/src/myapp
       - /tmp/go:/go
     working_dir: /usr/src/myapp
-    command: bash -c "pwd && go get -d -v -t && go test --cover -v ./... && go build -v -o go-demo"
+    command: bash -c "pwd && go test --cover -v ./... && go build -v -o go-demo"
 
   staging-dep:
     extends:
