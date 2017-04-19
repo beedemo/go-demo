@@ -15,11 +15,25 @@ pipeline {
     DOCKER_CREDENTIAL_ID = 'docker-hub-beedemo'
   }
   stages {
+    stage("Build Cache Image") {
+      when {
+        branch 'build-cache-image'
+        checkout scm
+        gitShortCommit(7)
+        sh "docker-compose -f docker-compose-test.yml -p ${BUILD_NUMBER}-${SHORT_COMMIT} run --rm unit-cache"
+        sh "docker commit go-demo-unit ${DOCKER_HUB_USER}/go-demo:unit-cache"
+        //sign in to registry
+        withDockerRegistry(registry: [credentialsId: "$DOCKER_CREDENTIAL_ID"]) { 
+            //push repo specific image to Docker registry (DockerHub in this case)
+            sh "docker push ${DOCKER_HUB_USER}/go-demo:unit-cache"
+        }
+      }
+    }
     stage("Unit") {
       steps {
         checkout scm
         gitShortCommit(7)
-        sh "docker-compose -f docker-compose-test.yml -p ${BUILD_NUMBER}-${SHORT_COMMIT} run --rm unit"
+        sh "UNIT_CACHE_IMAGE=${DOCKER_HUB_USER}/go-demo:unit-cache docker-compose -f docker-compose-test.yml -p ${BUILD_NUMBER}-${SHORT_COMMIT} run --rm unit"
         script {
           env.IMAGE_ID = sh(returnStdout: true, script: "docker build -q .").trim()
         }
