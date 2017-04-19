@@ -3,7 +3,9 @@ version: '2'
 services:
 
   unit-cache:
-    image: golang:1.7.5-alpine
+    build:
+        context: .
+        dockerfile: Dockerfile.build
     volumes:
       - .:/usr/src/myapp
       - /tmp/go:/go
