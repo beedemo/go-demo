@@ -1,0 +1,4 @@
+FROM golang:1.7.5-alpine
+MAINTAINER 	Kurt Madel <kmadel@cloudbees.com>
+
+RUN apk add --no-cache git
