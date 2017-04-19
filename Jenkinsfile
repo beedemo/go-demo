@@ -44,7 +44,7 @@ pipeline {
     }
     stage("Staging") {
       steps {
-        sh "UNIT_CACHE_IMAGE=${DOCKER_HUB_USER}/go-demo:unit-cache IMAGE_ID=${IMAGE_ID} docker-compose -f docker-compose-test-local.yml -p ${BUILD_NUMBER}-${SHORT_COMMIT} up -d staging-dep"
+        sh "IMAGE_ID=${IMAGE_ID} docker-compose -f docker-compose-test-local.yml -p ${BUILD_NUMBER}-${SHORT_COMMIT} up -d staging-dep"
         sh "UNIT_CACHE_IMAGE=${DOCKER_HUB_USER}/go-demo:unit-cache HOST_IP=localhost docker-compose -f docker-compose-test-local.yml -p ${BUILD_NUMBER}-${SHORT_COMMIT} run --rm staging"
       }
     }
