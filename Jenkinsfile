@@ -23,6 +23,7 @@ pipeline {
         checkout scm
         gitShortCommit(7)
         sh "docker-compose -f docker-compose-test.yml -p ${BUILD_NUMBER}-${SHORT_COMMIT} run unit-cache"
+        sh "docker ps -a"
         sh "docker commit go-demo-unit ${DOCKER_HUB_USER}/go-demo:unit-cache"
         sh "docker rm go-demo-unit"
         //sign in to registry

@@ -13,7 +13,6 @@ services:
 
   unit:
     image: ${UNIT_CACHE_IMAGE}
-    container_name: go-demo-unit
     volumes:
       - .:/usr/src/myapp
       - /tmp/go:/go
