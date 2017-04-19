@@ -18,6 +18,8 @@ pipeline {
     stage("Build Cache Image") {
       when {
         branch 'build-cache-image'
+      }
+      steps {
         checkout scm
         gitShortCommit(7)
         sh "docker-compose -f docker-compose-test.yml -p ${BUILD_NUMBER}-${SHORT_COMMIT} run --rm unit-cache"
