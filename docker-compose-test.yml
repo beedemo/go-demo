@@ -11,7 +11,7 @@ services:
     command: bash -c "pwd && go get -d -v -t && go test --cover -v ./... && go build -v -o go-demo"
 
   unit:
-    image: golang:1.6
+    image: ${UNIT_CACHE_IMAGE}
     volumes:
       - .:/usr/src/myapp
       - /tmp/go:/go
