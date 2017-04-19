@@ -8,7 +8,6 @@ services:
         dockerfile: Dockerfile.build
     volumes:
       - .:/usr/src/myapp
-      - /tmp/go:/go
     working_dir: /usr/src/myapp
     command: ash -c "pwd && go get -d -v -t && go test --cover -v ./... && go build -v -o go-demo"
 
@@ -16,7 +15,6 @@ services:
     image: ${UNIT_CACHE_IMAGE}
     volumes:
       - .:/usr/src/myapp
-      - /tmp/go:/go
     working_dir: /usr/src/myapp
     command: ash -c "pwd && go test --cover -v ./... && go build -v -o go-demo"
 
