@@ -3,7 +3,7 @@ version: '2'
 services:
 
   unit-cache:
-    image: golang:1.6
+    image: golang:1.7.5-alpine
     volumes:
       - .:/usr/src/myapp
       - /tmp/go:/go
