@@ -4,7 +4,6 @@ services:
 
   unit-cache:
     image: golang:1.6
-    container_name: go-demo-unit
     volumes:
       - .:/usr/src/myapp
       - /tmp/go:/go
