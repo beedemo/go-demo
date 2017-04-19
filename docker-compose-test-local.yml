@@ -7,12 +7,11 @@ services:
     image: go-demo
 
   unit:
-    image: golang:1.6
+    image: ${UNIT_CACHE_IMAGE}
     volumes:
       - .:/usr/src/myapp
-      - /tmp/go:/go
     working_dir: /usr/src/myapp
-    command: bash -c "go get -d -v -t && go test --cover -v ./... && go build -v -o go-demo"
+    command: bash -c "go test --cover -v ./... && go build -v -o go-demo"
 
   staging-dep:
     image: ${IMAGE_ID}
@@ -26,7 +25,7 @@ services:
       service: unit
     environment:
       - HOST_IP=staging-dep:8080
-    command: bash -c "go get -d -v -t && go test --tags integration -v"
+    command: bash -c "go test --tags integration -v"
 
   production:
     extends:
@@ -34,7 +33,7 @@ services:
     environment:
       - HOST_IP=${HOST_IP}
     network_mode: host
-    command: bash -c "go get -d -v -t && go test --tags integration -v"
+    command: bash -c "go test --tags integration -v"
 
   db:
     image: mongo:3.2.10
