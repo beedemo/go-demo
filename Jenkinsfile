@@ -61,10 +61,12 @@ pipeline {
       }
     }
     stage("Staging") {
+      //do not execute this stage for the build-cache-image branch
       when {
         not { branch 'build-cache-image' }
       }
       steps {
+        //we are passing in the ID of the Docker image we built above to use in the compose file
         sh "IMAGE_ID=${IMAGE_ID} docker-compose -f docker-compose-test-local.yml  up -d staging-dep"
         sh "UNIT_CACHE_IMAGE=${DOCKER_HUB_USER}/go-demo:unit-cache HOST_IP=localhost docker-compose -f docker-compose-test-local.yml run --rm staging"
       }
@@ -74,7 +76,7 @@ pipeline {
         branch 'master'
       }
       steps {
-        //Note the use of the SHORT_COMMIT environmental variable
+        //Note the use of the SHORT_COMMIT environmental variable as the image tag
         sh "docker tag ${IMAGE_ID} ${DOCKER_HUB_USER}/go-demo:${SHORT_COMMIT}"
         //once again setting up credentials for Docker Hub
         withDockerRegistry(registry: [credentialsId: "$DOCKER_CREDENTIAL_ID"]) {
