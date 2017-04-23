@@ -3,8 +3,7 @@ pipeline {
     //only keep logs for 5 runs
     buildDiscarder(logRotator(numToKeepStr: '5')) 
     //we only want to ever checkout
-    skipDefaultCheckout() 
-    timeout(time: 5, unit: 'MINUTES')
+    skipDefaultCheckout()
   }
   agent {
     //we need Docker Compose to run many of the sh steps
