@@ -6,6 +6,8 @@ services:
     build:
         context: .
         dockerfile: Dockerfile.build
+        args:
+            - COMMIT_SHA
     volumes:
       - .:/usr/src/myapp
     working_dir: /usr/src/myapp

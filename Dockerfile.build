@@ -1,4 +1,9 @@
 FROM golang:1.7.5-alpine
-MAINTAINER 	Kurt Madel <kmadel@cloudbees.com>
+
+LABEL maintainer "beedemo.sa@gmail.com"
+
+ARG COMMIT_SHA
+
+LABEL beedemo.commit.sha=$COMMIT_SHA
 
 RUN apk add --no-cache git
