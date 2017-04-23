@@ -28,7 +28,7 @@ pipeline {
         //this sh step will actually build a customized container using the Dockerfile.build file
         //the docker-compose run command runs a one time command against the specified service
         //the --name option assigns the specified name to the container
-        sh "docker-compose -f docker-compose-test.yml run --name go-demo-unit unit-cache"
+        sh "COMMIT_SHA=\$(git rev-parse HEAD | tr -d '\n') docker-compose -f docker-compose-test.yml run --name go-demo-unit unit-cache"
         //now that we have a container running with all of the build dependencies in the container we want to create a new Docker image from it
         //the docker commit command allows us to do exactly that by creating a new image from the go-demo-unit container’s changes
         sh "docker commit go-demo-unit ${DOCKER_HUB_USER}/go-demo:unit-cache"
@@ -56,7 +56,7 @@ pipeline {
           //this docker build command uses the "-q" argument which tells it to "Suppress the build output and print image ID on success" - it then strips off the newline character
           //this step diverges from the build step in the DevOps Toolkit 2.1 workshop [sh "docker build -t go-demo ."]
           //this will allow you to avoid naming collisions, although isn't absolutely necessary with DIND vs mounting the Docker Socket where it would be critical in this example
-          env.IMAGE_ID = sh(returnStdout: true, script: "docker build --cache-from alpine:3.4 -q . | tr -d '\n'")
+          env.IMAGE_ID = sh(returnStdout: true, script: """docker build --cache-from alpine:3.4 --build-arg COMMIT_SHA=\$(git rev-parse HEAD | tr -d '\n') --build-arg BUILD_CACHE_COMMIT_SHA=\$(docker inspect --format "{{ index .Config.Labels \"beedemo.commit.sha\"}}" ${DOCKER_HUB_USER}/go-demo:unit-cache | tr -d '\n') -q . | tr -d '\n'""")
         }
       }
     }
