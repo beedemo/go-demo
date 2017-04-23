@@ -1,65 +1,94 @@
-script {
-    def short_commit = null
-}
 pipeline {
   options { 
+    //only keep logs for 5 runs
     buildDiscarder(logRotator(numToKeepStr: '5')) 
+    //we only want to ever checkout
     skipDefaultCheckout() 
     timeout(time: 5, unit: 'MINUTES')
   }
   agent {
+    //we need Docker Compose to run many of the sh steps
+    //we want to use Docker-in-Docker (DIND) to isolate Docker Compose networks from other running jobs
     label "dind-compose"
   }
   environment {
+    //these will be used throughout the Pipeline
     DOCKER_HUB_USER = 'beedemo'
     DOCKER_CREDENTIAL_ID = 'docker-hub-beedemo'
   }
   stages {
     stage("Build Cache Image") {
       when {
+        //only execute this stage when there are pushes to the build-cache-image branch
+        //this makes it easy to update this special, custom Docker image that con
         branch 'build-cache-image'
       }
       steps {
         checkout scm
-        gitShortCommit(7)
-        sh "docker-compose -f docker-compose-test.yml -p ${BUILD_NUMBER}-${SHORT_COMMIT} run --name go-demo-unit unit-cache"
+        //this sh step will actually build a customized container using the Dockerfile.build file
+        //the docker-compose run command runs a one time command against the specified service
+        //the --name option assigns the specified name to the container
+        sh "docker-compose -f docker-compose-test.yml run --name go-demo-unit unit-cache"
+        //now that we have a container running with all of the build dependencies in the container we want to create a new Docker image from it
+        //the docker commit command allows us to do exactly that by creating a new image from the go-demo-unit container’s changes
         sh "docker commit go-demo-unit ${DOCKER_HUB_USER}/go-demo:unit-cache"
+        //no need to keep the container running, so we will remove it
         sh "docker rm go-demo-unit"
-        //sign in to registry
+        //sign in to registry - this is the less Declarative way, but results in fewer steps
         withDockerRegistry(registry: [credentialsId: "$DOCKER_CREDENTIAL_ID"]) { 
-            //push repo specific image to Docker registry (DockerHub in this case)
-            sh "docker push ${DOCKER_HUB_USER}/go-demo:unit-cache"
+          //push go-demo specific build image to a Docker registry (DockerHub in this case)
+          sh "docker push ${DOCKER_HUB_USER}/go-demo:unit-cache"
         }
       }
     }
     stage("Unit") {
       steps {
+        //we need to checkout scm again as the previous checkout only happens for the build-cache-image branch
         checkout scm
+        //this global library will sent a SHORT_COMMIT environmental variable the first 7 characters of the commit sha for the current go-demo repo checked out HEAD
         gitShortCommit(7)
-        sh "UNIT_CACHE_IMAGE=${DOCKER_HUB_USER}/go-demo:unit-cache docker-compose -f docker-compose-test.yml -p ${BUILD_NUMBER}-${SHORT_COMMIT} run --rm unit"
+        //NOTE: We are using the image that was pushed in the Build Cache Image stage - so if that did not get pushed successfully then this stage will fail
+        //the unit service maps the current workspace directory on the dind-compose agent to the '/usr/src/myapp' directory of the unit service container
+        //this results in the go-demo binary being created in the workspace and being available for the docker build below
+        sh "UNIT_CACHE_IMAGE=${DOCKER_HUB_USER}/go-demo:unit-cache docker-compose -f docker-compose-test.yml run --rm unit"
         script {
+          //we put this step in a script block - allowing us to fall back to Scripted Pipeline - and in this case assign the output of a sh step to an environmental variable
+          //this docker build command uses the "-q" argument which tells it to "Suppress the build output and print image ID on success" - it then strips off the newline character
+          //this step diverges from the build step in the DevOps Toolkit 2.1 workshop [sh "docker build -t go-demo ."]
+          //this will allow you to avoid naming collisions, although isn't absolutely necessary with DIND vs mounting the Docker Socket where it would be critical in this example
           env.IMAGE_ID = sh(returnStdout: true, script: "docker build --cache-from alpine:3.4 -q . | tr -d '\n'")
         }
       }
     }
     stage("Staging") {
+      when {
+        not { branch 'build-cache-image' }
+      }
       steps {
-        sh "IMAGE_ID=${IMAGE_ID} docker-compose -f docker-compose-test-local.yml -p ${BUILD_NUMBER}-${SHORT_COMMIT} up -d staging-dep"
-        sh "UNIT_CACHE_IMAGE=${DOCKER_HUB_USER}/go-demo:unit-cache HOST_IP=localhost docker-compose -f docker-compose-test-local.yml -p ${BUILD_NUMBER}-${SHORT_COMMIT} run --rm staging"
+        sh "IMAGE_ID=${IMAGE_ID} docker-compose -f docker-compose-test-local.yml  up -d staging-dep"
+        sh "UNIT_CACHE_IMAGE=${DOCKER_HUB_USER}/go-demo:unit-cache HOST_IP=localhost docker-compose -f docker-compose-test-local.yml run --rm staging"
       }
     }
     stage("Publish") {
+      when {
+        branch 'master'
+      }
       steps {
+        //Note the use of the SHORT_COMMIT environmental variable
         sh "docker tag ${IMAGE_ID} ${DOCKER_HUB_USER}/go-demo:${SHORT_COMMIT}"
+        //once again setting up credentials for Docker Hub
         withDockerRegistry(registry: [credentialsId: "$DOCKER_CREDENTIAL_ID"]) {
-           sh "docker push $DOCKER_HUB_USER/go-demo:${SHORT_COMMIT}"
+          //push the actual go-app that we just built and tested
+          sh "docker push $DOCKER_HUB_USER/go-demo:${SHORT_COMMIT}"
         }
       }
     }
   }
+  //the post section allows us to greatly reduce the need for try/catch blocks
+  //with Scripted Pipeline we would have had to put a try catch around the entire script
   post {
     always {
-      sh "docker-compose -f docker-compose-test-local.yml -p ${BUILD_NUMBER}-${SHORT_COMMIT} down"
+      sh "docker-compose -f docker-compose-test-local.yml down"
     }
   }
 }
