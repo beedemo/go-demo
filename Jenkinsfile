@@ -14,6 +14,8 @@ pipeline {
     //these will be used throughout the Pipeline
     DOCKER_HUB_USER = 'beedemo'
     DOCKER_CREDENTIAL_ID = 'docker-hub-beedemo'
+    //will shorten sh step for frist two stages, but require stage level variables to override
+    COMPOSE_FILE = 'docker-compose-test.yml'
   }
   stages {
     stage("Build Cache Image") {
@@ -27,7 +29,7 @@ pipeline {
         //this sh step will actually build a customized container using the Dockerfile.build file
         //the docker-compose run command runs a one time command against the specified service
         //the --name option assigns the specified name to the container
-        sh "COMMIT_SHA=\$(git rev-parse HEAD | tr -d '\n') docker-compose -f docker-compose-test.yml run --name go-demo-unit unit-cache"
+        sh "COMMIT_SHA=\$(git rev-parse HEAD | tr -d '\n') docker-compose run --name go-demo-unit unit-cache"
         //now that we have a container running with all of the build dependencies in the container we want to create a new Docker image from it
         //the docker commit command allows us to do exactly that by creating a new image from the go-demo-unit container’s changes
         sh "docker commit go-demo-unit ${DOCKER_HUB_USER}/go-demo:unit-cache"
@@ -49,7 +51,7 @@ pipeline {
         //NOTE: We are using the image that was pushed in the Build Cache Image stage - so if that did not get pushed successfully then this stage will fail
         //the unit service maps the current workspace directory on the dind-compose agent to the '/usr/src/myapp' directory of the unit service container
         //this results in the go-demo binary being created in the workspace and being available for the docker build below
-        sh "UNIT_CACHE_IMAGE=${DOCKER_HUB_USER}/go-demo:unit-cache docker-compose -f docker-compose-test.yml run --rm unit"
+        sh "UNIT_CACHE_IMAGE=${DOCKER_HUB_USER}/go-demo:unit-cache docker-compose run --rm unit"
         script {
           //we put this step in a script block - allowing us to fall back to Scripted Pipeline - and in this case assign the output of a sh step to an environmental variable
           //this docker build command uses the "-q" argument which tells it to "Suppress the build output and print image ID on success" - it then strips off the newline character
