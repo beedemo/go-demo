@@ -52,6 +52,7 @@ pipeline {
         //the unit service maps the current workspace directory on the dind-compose agent to the '/usr/src/myapp' directory of the unit service container
         //this results in the go-demo binary being created in the workspace and being available for the docker build below
         sh "UNIT_CACHE_IMAGE=${DOCKER_HUB_USER}/go-demo:unit-cache docker-compose run --rm unit"
+        junit 'report.xml'
         script {
           //we put this step in a script block - allowing us to fall back to Scripted Pipeline - and in this case assign the output of a sh step to an environmental variable
           //this docker build command uses the "-q" argument which tells it to "Suppress the build output and print image ID on success" - it then strips off the newline character
