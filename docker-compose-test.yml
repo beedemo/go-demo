@@ -35,7 +35,7 @@ services:
     environment:
       - HOST_IP=localhost:8080
     network_mode: host
-    command: ash -c "cd /usr/src/myapp && go get -d -v -t && go test --tags integration -v"
+    command: ash -c "cd /usr/src/myapp && go get -d -v -t && go test --tags integration -v 2>&1 | go-junit-report > report.xml"
 
   production:
     extends:
