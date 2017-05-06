@@ -11,14 +11,14 @@ services:
     volumes:
       - .:/usr/src/myapp
     working_dir: /usr/src/myapp
-    command: ash -c "pwd && go get -d -v -t && go test --cover -v ./... && go build -v -o go-demo"
+    command: ash -c "pwd && go get -u github.com/jstemmer/go-junit-report && go get -d -v -t && go test --cover -v ./... && go build -v -o go-demo"
 
   unit:
     image: ${UNIT_CACHE_IMAGE}
     volumes:
       - .:/usr/src/myapp
     working_dir: /usr/src/myapp
-    command: ash -c "pwd && go test --cover -v ./... && go build -v -o go-demo"
+    command: ash -c "pwd && go test --cover -v ./... 2>&1 | go-junit-report > report.xml && go build -v -o go-demo"
 
   staging-dep:
     extends:
@@ -35,7 +35,7 @@ services:
     environment:
       - HOST_IP=localhost:8080
     network_mode: host
-    command: ash -c "cd /usr/src/myapp && go get -d -v -t && go test --tags integration -v"
+    command: ash -c "cd /usr/src/myapp && go get -d -v -t && go test --tags integration -v 2>&1 | go-junit-report > report.xml"
 
   production:
     extends:
