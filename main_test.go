@@ -9,7 +9,6 @@ import (
 	"testing"
 	"time"
 	"reflect"
-    "github.com/jstemmer/go-junit-report"
 )
 
 // Setup
