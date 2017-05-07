@@ -1,4 +1,4 @@
-version: '2'
+version: '3.2'
 
 services:
 
@@ -6,6 +6,8 @@ services:
     build:
         context: .
         dockerfile: Dockerfile.build
+        cache_from: beedemo/go-demo:unit-cache
+            - 
         args:
             - COMMIT_SHA
     volumes:
