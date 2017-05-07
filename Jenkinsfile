@@ -46,6 +46,9 @@ pipeline {
       steps {
         //we need to checkout scm again as the previous checkout only happens for the build-cache-image branch
         checkout scm
+        //load image in saved in agent
+        sh 'docker load -i /jenkins/go-demo-unit-cache.tar'
+        sh 'docker images'
         //this global library will sent a SHORT_COMMIT environmental variable the first 7 characters of the commit sha for the current go-demo repo checked out HEAD
         gitShortCommit(7)
         //NOTE: We are using the image that was pushed in the Build Cache Image stage - so if that did not get pushed successfully then this stage will fail
