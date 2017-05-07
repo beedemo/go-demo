@@ -72,8 +72,6 @@ pipeline {
         not { branch 'build-cache-image' }
       }
       steps {
-        //load mongo image from cache
-        sh "docker load -i /jenkins/mongo.tar"
         //we are passing in the ID of the Docker image we built above to use in the compose file
         sh "IMAGE_ID=${IMAGE_ID} docker-compose -f docker-compose-test-local.yml  up -d staging-dep"
         sh "UNIT_CACHE_IMAGE=${DOCKER_HUB_USER}/go-demo:unit-cache HOST_IP=localhost docker-compose -f docker-compose-test-local.yml run --rm staging"
