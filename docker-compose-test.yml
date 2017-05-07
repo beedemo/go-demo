@@ -1,4 +1,4 @@
-version: '2'
+version: '3.2'
 
 services:
 
@@ -6,6 +6,8 @@ services:
     build:
         context: .
         dockerfile: Dockerfile.build
+        cache_from: 
+            - beedemo/go-demo:unit-cache
         args:
             - COMMIT_SHA
     volumes:
@@ -21,30 +23,30 @@ services:
     command: ash -c "pwd && go test --cover -v ./... 2>&1 | go-junit-report > report.xml && go build -v -o go-demo"
 
   staging-dep:
-    extends:
-      file: docker-compose.yml
-      service: app
+    image: beedemo/go-demo
     ports:
       - 8080:8080
     depends_on:
       - db
 
   staging:
-    extends:
-      service: unit
+    image: ${UNIT_CACHE_IMAGE}
+    volumes:
+      - .:/usr/src/myapp
+    working_dir: /usr/src/myapp
     environment:
       - HOST_IP=localhost:8080
     network_mode: host
     command: ash -c "cd /usr/src/myapp && go get -d -v -t && go test --tags integration -v 2>&1 | go-junit-report > report.xml"
 
   production:
-    extends:
-      service: unit
+    image: ${UNIT_CACHE_IMAGE}
+    volumes:
+      - .:/usr/src/myapp
+    working_dir: /usr/src/myapp
     environment:
       - HOST_IP=${HOST_IP}
     command: ash -c "cd /usr/src/myapp && go get -d -v -t && go test --tags integration -v"
 
   db:
-    extends:
-      file: docker-compose.yml
-      service: db
+    image: mongo:3.2.10
