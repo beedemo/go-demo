@@ -20,6 +20,7 @@ pipeline {
   stages {
     stage("Prepare Build Environment") {
       steps {
+
         //checkout code for all stages - sharing agent across stages
         checkout scm
         //load docker image saved in agent - this speeds up the job almost 10x
