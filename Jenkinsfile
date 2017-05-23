@@ -20,6 +20,7 @@ pipeline {
   stages {
     stage("Prepare Build Environment") {
       steps {
+
         //checkout code for all stages - sharing agent across stages
         checkout scm
         //load image in saved in agent
