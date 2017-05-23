@@ -20,6 +20,8 @@ pipeline {
   stages {
     stage("Prepare Build Environment") {
       steps {
+
+        //checkout code for all stages - sharing agent across stages
         checkout scm
         //load image in saved in agent
         sh 'docker load -i /jenkins/go-demo-unit-cache.tar'
