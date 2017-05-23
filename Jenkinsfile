@@ -2,19 +2,19 @@ pipeline {
   options { 
     //only keep logs for 5 runs
     buildDiscarder(logRotator(numToKeepStr: '5')) 
-    //we only want to ever checkout
+    //declarative does a checkout automatically, set this to disable
     skipDefaultCheckout()
   }
   agent {
-    //we need Docker Compose to run many of the sh steps
-    //we want to use Docker-in-Docker (DIND) to isolate Docker Compose networks from other running jobs
+    //we need Docker Compose in many of the sh steps
+    //we want to use Docker-in-Docker (DIND) to isolate Docker Compose images, containers, networks from other running jobs
     label "dind-compose"
   }
   environment {
     //these will be used throughout the Pipeline
     DOCKER_HUB_USER = 'beedemo'
     DOCKER_CREDENTIAL_ID = 'docker-hub-beedemo'
-    //will shorten sh step for frist two stages, but require stage level variables to override
+    //will shorten sh step for frist two stages, but require stage level environment variables to override
     COMPOSE_FILE = 'docker-compose-test.yml'
   }
   stages {
@@ -22,14 +22,14 @@ pipeline {
       steps {
         //checkout code for all stages - sharing agent across stages
         checkout scm
-        //load image in saved in agent
+        //load docker image saved in agent - this speeds up the job almost 10x
         sh 'docker load -i /jenkins/go-demo-unit-cache.tar'
       }
     }
     stage("Build Cache Image") {
       when {
         //only execute this stage when there are pushes to the build-cache-image branch
-        //this makes it easy to update this special, custom Docker image that con
+        //this makes it easy to update this special, custom Docker image that contains the go-demo app dependencies
         branch 'build-cache-image'
       }
       steps {
@@ -58,6 +58,7 @@ pipeline {
         //this results in the go-demo binary being created in the workspace and being available for the docker build below
         sh "UNIT_CACHE_IMAGE=${DOCKER_HUB_USER}/go-demo:unit-cache docker-compose run --rm unit"
         junit 'report.xml'
+        //script blocks allow you to use the 'regular' scripted Pipeline Groovy syntax
         script {
           //we put this step in a script block - allowing us to fall back to Scripted Pipeline - and in this case assign the output of a sh step to an environmental variable
           //this docker build command uses the "-q" argument which tells it to "Suppress the build output and print image ID on success" - it then strips off the newline character
@@ -68,19 +69,21 @@ pipeline {
       }
     }
     stage("Staging") {
-      //do not execute this stage for the build-cache-image branch
       when {
+        //do not execute this stage for the build-cache-image branch
         not { branch 'build-cache-image' }
       }
       steps {
         //we are passing in the ID of the Docker image we built above to use in the compose file
         sh "IMAGE_ID=${IMAGE_ID} docker-compose -f docker-compose-test-local.yml  up -d staging-dep"
         sh "UNIT_CACHE_IMAGE=${DOCKER_HUB_USER}/go-demo:unit-cache HOST_IP=localhost docker-compose -f docker-compose-test-local.yml run --rm staging"
+        //track test trends in Jenkins
         junit 'report.xml'
       }
     }
     stage("Publish") {
       when {
+        //only publish for master branch
         branch 'master'
       }
       steps {
